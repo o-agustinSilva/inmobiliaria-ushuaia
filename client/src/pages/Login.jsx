@@ -31,16 +31,16 @@ const Login = () => {
 
     switch (demoRole) {
       case 'SuperAdmin':
-        demoEmail = 'superadmin@inmobiliariaushuaia.com';
-        demoPassword = 'superadmin123';
+        demoEmail = import.meta.env.VITE_SUPERADMIN_EMAIL || '';
+        demoPassword = import.meta.env.VITE_SUPERADMIN_PASSWORD || '';
         break;
       case 'Martillero':
-        demoEmail = 'martillero@inmobiliariaushuaia.com';
-        demoPassword = 'martillero123';
+        demoEmail = import.meta.env.VITE_MARTILLERO_EMAIL || '';
+        demoPassword = import.meta.env.VITE_MARTILLERO_PASSWORD || '';
         break;
       case 'Agente':
-        demoEmail = 'agente@inmobiliariaushuaia.com';
-        demoPassword = 'agente123';
+        demoEmail = import.meta.env.VITE_AGENTE_EMAIL || '';
+        demoPassword = import.meta.env.VITE_AGENTE_PASSWORD || '';
         break;
       default:
         break;
