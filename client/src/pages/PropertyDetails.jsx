@@ -1,0 +1,240 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useAuth, API_BASE_URL } from '../context/AuthContext';
+import ContactForm from '../components/ContactForm';
+import { MapPin, BedDouble, Bath, Maximize, ArrowLeft, Calendar, Phone, Mail, Award } from 'lucide-react';
+import L from 'leaflet';
+
+const PropertyDetails = () => {
+  const { id } = useParams();
+  const { showToast } = useAuth();
+  const [property, setProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const mapInitializedRef = useRef(false);
+  const mapRef = useRef(null);
+
+  // Helper for resolving image urls
+  const getImageUrl = (url) => {
+    if (!url) return 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80';
+    return url.startsWith('http') ? url : `http://localhost:5000${url}`;
+  };
+
+  useEffect(() => {
+    const fetchPropertyDetail = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/properties/${id}`);
+        const data = await res.json();
+        if (res.ok) {
+          setProperty(data);
+        } else {
+          showToast(data.error || 'Error al cargar propiedad', 'error');
+        }
+      } catch (error) {
+        console.error('Error fetching property detail:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPropertyDetail();
+  }, [id]);
+
+  // Leaflet map initialization
+  useEffect(() => {
+    if (!property || loading) return;
+
+    // Ushuaia coordinates base with small random offset for different properties to look realistic
+    const baseLat = -54.8019;
+    const baseLng = -68.303;
+    const propertySeed = parseInt(property.id) || 1;
+    const latOffset = (Math.sin(propertySeed) * 0.015);
+    const lngOffset = (Math.cos(propertySeed) * 0.025);
+    const lat = baseLat + latOffset;
+    const lng = baseLng + lngOffset;
+
+    // Check if map container exists and clear previous leaflet instance if needed
+    const container = L.DomUtil.get('property-map');
+    if (container) {
+      container._leaflet_id = null;
+    }
+
+    try {
+      const map = L.map('property-map').setView([lat, lng], 14);
+      mapRef.current = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Create a custom icon or standard marker
+      const marker = L.marker([lat, lng]).addTo(map);
+      marker.bindPopup(`<b>${property.titulo}</b><br/>${property.direccion}`).openPopup();
+
+      mapInitializedRef.current = true;
+    } catch (e) {
+      console.error('Leaflet initialization error:', e);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [property, loading]);
+
+  if (loading) {
+    return (
+      <div className="container" style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(14, 74, 71, 0.1)', borderTopColor: 'var(--primary-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+        <h2 style={{ color: 'var(--primary-color)' }}>Propiedad no encontrada</h2>
+        <p style={{ color: 'var(--text-muted)', margin: '16px 0 24px 0' }}>
+          La propiedad que estás buscando no existe o fue dada de baja.
+        </p>
+        <Link to="/" className="btn-secondary">Volver al Inicio</Link>
+      </div>
+    );
+  }
+
+  const imagesList = property.images && property.images.length > 0 ? property.images : [{ url: null }];
+  const mainImage = imagesList[activeImageIndex];
+
+  return (
+    <div className="container" style={{ paddingTop: '30px' }}>
+      {/* Back button */}
+      <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary-color)', fontWeight: 600, marginBottom: '24px', transition: 'var(--transition-smooth)' }} className="back-link">
+        <ArrowLeft size={16} />
+        <span>Volver al catálogo</span>
+      </Link>
+
+      <div className="details-layout">
+        {/* Main Details Area */}
+        <div className="details-main-col">
+          {/* Gallery Carousel */}
+          <div className="gallery-container">
+            <img 
+              src={getImageUrl(mainImage.url)} 
+              alt={property.titulo} 
+              className="gallery-main-img" 
+            />
+            {imagesList.length > 1 && (
+              <div className="gallery-thumbs">
+                {imagesList.map((img, index) => (
+                  <img
+                    key={img.id || index}
+                    src={getImageUrl(img.url)}
+                    alt={`${property.titulo} thumbnail ${index + 1}`}
+                    className={`gallery-thumb ${activeImageIndex === index ? 'active' : ''}`}
+                    onClick={() => setActiveImageIndex(index)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Main Info */}
+          <div className="detail-main-info">
+            <div className="detail-header">
+              <div>
+                <h1 className="detail-title">{property.titulo}</h1>
+                <p className="card-address" style={{ marginTop: '6px', fontSize: '16px' }}>
+                  <MapPin size={16} className="logo-accent" />
+                  <span>{property.direccion}</span>
+                </p>
+              </div>
+              <div className="detail-price-wrapper">
+                <span className="badge-operacion" style={{ backgroundColor: property.tipo === 'Alquiler' ? '#0e4a47' : property.tipo === 'Venta en pozo' ? '#e29578' : '#2d3748', color: '#fff', fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                  {property.tipo || 'Venta'}
+                </span>
+                <span className="detail-price-amount">
+                  {property.moneda === 'USD' ? 'USD $' : '$'}{Number(property.precio).toLocaleString('es-AR')}
+                </span>
+              </div>
+            </div>
+
+            {/* Amenities Grid */}
+            <div className="detail-amenity-grid">
+              <div className="detail-amenity-card">
+                <BedDouble size={24} style={{ color: 'var(--primary-color)' }} />
+                <span className="detail-amenity-value">{property.dormitorios}</span>
+                <span className="detail-amenity-label">Dormitorios</span>
+              </div>
+              <div className="detail-amenity-card">
+                <Bath size={24} style={{ color: 'var(--primary-color)' }} />
+                <span className="detail-amenity-value">{property.banos}</span>
+                <span className="detail-amenity-label">Baños</span>
+              </div>
+              <div className="detail-amenity-card">
+                <Maximize size={24} style={{ color: 'var(--primary-color)' }} />
+                <span className="detail-amenity-value">{property.m2}</span>
+                <span className="detail-amenity-label">Metros (m²)</span>
+              </div>
+            </div>
+
+            <h2 className="detail-description-title">Descripción</h2>
+            <p className="detail-description">
+              {property.descripcion || 'Sin descripción disponible por el momento.'}
+            </p>
+          </div>
+
+          {/* Map Location */}
+          <div className="map-section">
+            <h2 className="map-title">Ubicación aproximada</h2>
+            <div className="map-wrapper">
+              <div id="property-map" style={{ width: '100%', height: '100%' }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar Panel (Contact form and agent profile) */}
+        <div className="contact-sidebar">
+          {/* Agent details */}
+          <div className="sidebar-card" style={{ paddingBottom: '20px' }}>
+            <h3 className="sidebar-title" style={{ fontSize: '16px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Agente Responsable
+            </h3>
+            <div className="agent-profile">
+              <div className="agent-avatar">
+                {property.agent ? property.agent.nombre.charAt(0) : 'U'}
+              </div>
+              <div className="agent-info">
+                <span className="agent-name">{property.agent ? property.agent.nombre : 'Inmobiliaria Ushuaia'}</span>
+                <span className="agent-role">{property.agent ? property.agent.rol : 'Martillero Responsable'}</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Phone size={14} />
+                <span>+54 2901 445588</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Mail size={14} />
+                <span>{property.agent ? property.agent.email : 'contacto@ushuaia.com'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Award size={14} />
+                <span>Matrícula N° 846 TDF</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Form */}
+          <div className="sidebar-card">
+            <h3 className="sidebar-title">Contactar Agente</h3>
+            <ContactForm propertyId={property.id} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PropertyDetails;
