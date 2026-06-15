@@ -38,12 +38,6 @@ const Footer = () => {
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
             © {currentYear} Inmobiliaria Ushuaia. Todos los derechos reservados.
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Shield size={12} className="footer-admin-link" />
-            <Link to="/admin/login" className="footer-admin-link" style={{ fontSize: '13px' }}>
-              Portal de Administración Interno
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

@@ -14,22 +14,14 @@ const Dashboard = () => {
   // Redirect if not logged in
   useEffect(() => {
     if (!token && !localStorage.getItem('inmo_token')) {
-      navigate('/admin/login');
+      navigate('/personal');
     }
   }, [token]);
 
-  if (!user) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(14, 74, 71, 0.1)', borderTopColor: 'var(--primary-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    );
-  }
-
   // Set default tab based on role
   const getInitialTab = () => {
-    if (user.rol === 'Agente') return 'mis-propiedades';
-    if (user.rol === 'Martillero') return 'estadisticas';
+    if (user?.rol === 'Agente') return 'mis-propiedades';
+    if (user?.rol === 'Martillero') return 'estadisticas';
     return 'servidor';
   };
 
@@ -66,6 +58,7 @@ const Dashboard = () => {
 
   // Fetch functions based on active section
   const fetchProperties = async () => {
+    if (!user) return;
     try {
       const res = await fetch(`${API_BASE_URL}/properties`, {
         headers: {
@@ -82,7 +75,7 @@ const Dashboard = () => {
   };
 
   const fetchStats = async () => {
-    if (user.rol !== 'Martillero' && user.rol !== 'SuperAdmin') return;
+    if (!user || (user.rol !== 'Martillero' && user.rol !== 'SuperAdmin')) return;
     try {
       const res = await fetch(`${API_BASE_URL}/properties/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -95,7 +88,7 @@ const Dashboard = () => {
   };
 
   const fetchMessages = async () => {
-    if (user.rol !== 'Martillero' && user.rol !== 'SuperAdmin') return;
+    if (!user || (user.rol !== 'Martillero' && user.rol !== 'SuperAdmin')) return;
     try {
       const res = await fetch(`${API_BASE_URL}/contact`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -108,7 +101,7 @@ const Dashboard = () => {
   };
 
   const fetchUsers = async () => {
-    if (user.rol !== 'Martillero' && user.rol !== 'SuperAdmin') return;
+    if (!user || (user.rol !== 'Martillero' && user.rol !== 'SuperAdmin')) return;
     try {
       const res = await fetch(`${API_BASE_URL}/auth/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -121,7 +114,7 @@ const Dashboard = () => {
   };
 
   const fetchSystemHealth = async () => {
-    if (user.rol !== 'SuperAdmin') return;
+    if (!user || user.rol !== 'SuperAdmin') return;
     try {
       const res = await fetch(`${API_BASE_URL}/admin/system-health`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -139,7 +132,7 @@ const Dashboard = () => {
     fetchMessages();
     fetchUsers();
     fetchSystemHealth();
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   // Form submit handlers
   const handlePropSubmit = async (e) => {
@@ -323,6 +316,14 @@ const Dashboard = () => {
       });
     setActiveTab('cargar-propiedad');
   };
+
+  if (!user) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(14, 74, 71, 0.1)', borderTopColor: 'var(--primary-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">

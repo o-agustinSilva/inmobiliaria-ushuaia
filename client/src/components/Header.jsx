@@ -75,7 +75,7 @@ const Header = () => {
           
           {/* Mobile-only actions section inside the drawer */}
           <div className="mobile-actions">
-            {user ? (
+            {user && (
               <>
                 <Link to="/admin/dashboard" className="sidebar-menu-btn active" onClick={() => setIsMenuOpen(false)} style={{ display: 'flex', gap: '8px', padding: '12px 20px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', color: '#fff', width: '100%', justifyContent: 'center' }}>
                   <LayoutDashboard size={18} />
@@ -86,18 +86,13 @@ const Header = () => {
                   <span>Cerrar Sesión</span>
                 </button>
               </>
-            ) : (
-              <Link to="/admin/login" className="btn-login" onClick={() => setIsMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%' }}>
-                <UserCircle2 size={18} />
-                <span>Acceso Interno</span>
-              </Link>
             )}
           </div>
         </nav>
 
         {/* Header Actions (Access to admin portal) - Desktop Only */}
         <div className="header-actions">
-          {user ? (
+          {user && (
             <>
               <Link to="/admin/dashboard" className="sidebar-menu-btn active" style={{ display: 'flex', gap: '8px', padding: '8px 14px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', color: '#fff' }}>
                 <LayoutDashboard size={18} />
@@ -107,11 +102,6 @@ const Header = () => {
                 <LogOut size={18} />
               </button>
             </>
-          ) : (
-            <Link to="/admin/login" className="btn-login" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <UserCircle2 size={18} />
-              <span>Acceso Interno</span>
-            </Link>
           )}
         </div>
       </div>
