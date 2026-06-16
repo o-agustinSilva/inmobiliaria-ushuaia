@@ -44,14 +44,9 @@ const PropertyDetails = () => {
   useEffect(() => {
     if (!property || loading) return;
 
-    // Ushuaia coordinates base with small random offset for different properties to look realistic
-    const baseLat = -54.8019;
-    const baseLng = -68.303;
-    const propertySeed = parseInt(property.id) || 1;
-    const latOffset = (Math.sin(propertySeed) * 0.015);
-    const lngOffset = (Math.cos(propertySeed) * 0.025);
-    const lat = baseLat + latOffset;
-    const lng = baseLng + lngOffset;
+    // Use actual database coordinates or fallback to Ushuaia center
+    const lat = property.latitud ? parseFloat(property.latitud) : -54.8019;
+    const lng = property.longitud ? parseFloat(property.longitud) : -68.303;
 
     // Check if map container exists and clear previous leaflet instance if needed
     const container = L.DomUtil.get('property-map');
@@ -60,15 +55,29 @@ const PropertyDetails = () => {
     }
 
     try {
-      const map = L.map('property-map').setView([lat, lng], 14);
+      const map = L.map('property-map').setView([lat, lng], 15);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      // Use consistent voyager tiles matching Home map
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(map);
 
-      // Create a custom icon or standard marker
-      const marker = L.marker([lat, lng]).addTo(map);
+      // Premium custom marker matching the home map style
+      const customMapIcon = L.divIcon({
+        className: 'custom-map-marker',
+        html: `
+          <div class="marker-pin"></div>
+          <div class="marker-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 13px; height: 13px;"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+        `,
+        iconSize: [38, 38],
+        iconAnchor: [19, 38],
+        popupAnchor: [0, -34]
+      });
+
+      const marker = L.marker([lat, lng], { icon: customMapIcon }).addTo(map);
       marker.bindPopup(`<b>${property.titulo}</b><br/>${property.direccion}`).openPopup();
 
       mapInitializedRef.current = true;
