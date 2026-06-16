@@ -68,7 +68,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: agent.id,
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.7995,
+        longitud: -68.3210
       });
 
       const p2 = await Property.create({
@@ -82,7 +84,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: agent.id,
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.8064,
+        longitud: -68.3035
       });
 
       const p3 = await Property.create({
@@ -96,7 +100,9 @@ async function initDb(force = false) {
         estado: 'Pendiente', // Starts as pending to test Martillero approval!
         usuario_id: agent.id,
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.7890,
+        longitud: -68.3610
       });
 
       const p4 = await Property.create({
@@ -110,7 +116,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: martillero.id,
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.8020,
+        longitud: -68.3300
       });
 
       // 3 ALQUILERES (ARS $950.000 a $1.200.000)
@@ -118,14 +126,16 @@ async function initDb(force = false) {
         titulo: 'Hermosa Cabaña de Montaña (Alquiler Mensual)',
         direccion: 'Gobernador Campos 980, Ushuaia',
         precio: 950000,
-        descripcion: 'Encantadora cabaña de madera totalmente amueblada y equipada. Ubicada en una zona tranquila y residencial con espectacular vista a la montaña. Living con hogar a leña, cocina completa y un dormitorio amplio en loft. Ideal para profesionales o parejas.',
+        descripcion: 'Encantadora cabaña de madera totalmente amueblada y equipada. Ubicada en una zona tranquila y residencial con espectacular vista a la montaña. Living con hogar a leña, cocina completa and un dormitorio amplio en loft. Ideal para profesionales o parejas.',
         dormitorios: 1,
         banos: 1,
         m2: 65,
         estado: 'Aprobado',
         usuario_id: agent.id,
         tipo: 'Alquiler',
-        moneda: 'ARS'
+        moneda: 'ARS',
+        latitud: -54.8075,
+        longitud: -68.3120
       });
 
       const p6 = await Property.create({
@@ -139,7 +149,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: agent.id,
         tipo: 'Alquiler',
-        moneda: 'ARS'
+        moneda: 'ARS',
+        latitud: -54.8090,
+        longitud: -68.3050
       });
 
       const p7 = await Property.create({
@@ -153,7 +165,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: martillero.id,
         tipo: 'Alquiler',
-        moneda: 'ARS'
+        moneda: 'ARS',
+        latitud: -54.8250,
+        longitud: -68.3680
       });
 
       // 3 VENTAS (USD $80.000 a $190.000)
@@ -168,7 +182,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: agent.id,
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.7950,
+        longitud: -68.2750
       });
 
       const p9 = await Property.create({
@@ -182,7 +198,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: agent.id,
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.8030,
+        longitud: -68.3220
       });
 
       const p10 = await Property.create({
@@ -196,7 +214,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: martillero.id,
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.7920,
+        longitud: -68.3450
       });
 
       const p11 = await Property.create({
@@ -210,7 +230,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: martillero.id,
         tipo: 'Venta en pozo',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.8055,
+        longitud: -68.3015
       });
 
       const p12 = await Property.create({
@@ -224,7 +246,9 @@ async function initDb(force = false) {
         estado: 'Aprobado',
         usuario_id: agent.id,
         tipo: 'Venta en pozo',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: -54.7980,
+        longitud: -68.2680
       });
 
       // Seed Images

@@ -116,7 +116,7 @@ const getPropertyById = async (req, res) => {
 };
 
 const createProperty = async (req, res) => {
-  const { titulo, direccion, precio, descripcion, dormitorios, banos, m2, tipo, moneda } = req.body;
+  const { titulo, direccion, precio, descripcion, dormitorios, banos, m2, tipo, moneda, latitud, longitud } = req.body;
 
   try {
     if (!titulo || !direccion || !precio || dormitorios === undefined || banos === undefined || m2 === undefined) {
@@ -138,7 +138,9 @@ const createProperty = async (req, res) => {
       estado: initialStatus,
       usuario_id: req.user.id,
       tipo: tipo || 'Venta',
-      moneda: moneda || 'USD'
+      moneda: moneda || 'USD',
+      latitud: latitud ? parseFloat(latitud) : null,
+      longitud: longitud ? parseFloat(longitud) : null
     });
 
     // Save optimized images if uploaded
@@ -169,7 +171,7 @@ const createProperty = async (req, res) => {
 
 const updateProperty = async (req, res) => {
   const { id } = req.params;
-  const { titulo, direccion, precio, descripcion, dormitorios, banos, m2, tipo, moneda } = req.body;
+  const { titulo, direccion, precio, descripcion, dormitorios, banos, m2, tipo, moneda, latitud, longitud } = req.body;
 
   try {
     const property = await Property.findByPk(id);
@@ -192,7 +194,9 @@ const updateProperty = async (req, res) => {
       banos: banos !== undefined ? parseInt(banos) : property.banos,
       m2: m2 !== undefined ? parseInt(m2) : property.m2,
       tipo: tipo || property.tipo,
-      moneda: moneda || property.moneda
+      moneda: moneda || property.moneda,
+      latitud: latitud !== undefined ? (latitud ? parseFloat(latitud) : null) : property.latitud,
+      longitud: longitud !== undefined ? (longitud ? parseFloat(longitud) : null) : property.longitud
     });
 
     // Save extra optimized images if uploaded

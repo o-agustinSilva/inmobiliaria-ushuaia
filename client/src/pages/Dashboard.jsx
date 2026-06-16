@@ -6,6 +6,53 @@ import {
   Trash2, Check, RefreshCw, LogOut, CheckCircle, ShieldAlert, 
   FolderEdit, Mail, DollarSign, Tag, ClipboardList
 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Mini Map Recenter component
+const MiniMapRecenter = ({ lat, lng }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (lat && lng) {
+      map.setView([lat, lng], 15);
+    }
+  }, [lat, lng, map]);
+  return null;
+};
+
+// Custom mini map pin style (red pin)
+const miniMapIcon = L.divIcon({
+  className: 'custom-map-marker-draggable',
+  html: `
+    <div style="
+      width: 28px;
+      height: 28px;
+      border-radius: 50% 50% 50% 0;
+      background: #e63946;
+      position: absolute;
+      transform: rotate(-45deg);
+      left: 50%;
+      top: 50%;
+      margin: -14px 0 0 -14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      border: 2px solid white;
+    "></div>
+    <div style="
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    "></div>
+  `,
+  iconSize: [28, 28],
+  iconAnchor: [14, 28]
+});
+
 
 const Dashboard = () => {
   const { user, token, logout, showToast } = useAuth();
@@ -44,8 +91,11 @@ const Dashboard = () => {
     m2: '',
     descripcion: '',
     tipo: 'Venta',
-    moneda: 'USD'
+    moneda: 'USD',
+    latitud: '',
+    longitud: ''
   });
+  const [geocoding, setGeocoding] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [editingPropId, setEditingPropId] = useState(null);
 
@@ -134,6 +184,66 @@ const Dashboard = () => {
     fetchSystemHealth();
   }, [activeTab, user]);
 
+  const geocodeAddress = async () => {
+    const address = propForm.direccion;
+    if (!address) {
+      showToast('Por favor escribe una dirección primero.', 'error');
+      return;
+    }
+    setGeocoding(true);
+    try {
+      const query = encodeURIComponent(`${address}, Ushuaia, Tierra del Fuego, Argentina`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
+        headers: {
+          'Accept-Language': 'es'
+        }
+      });
+      if (!res.ok) throw new Error('Error al conectar con el servicio de geocoding.');
+      
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setPropForm(prev => ({
+          ...prev,
+          latitud: parseFloat(lat).toFixed(8),
+          longitud: parseFloat(lon).toFixed(8)
+        }));
+        showToast('Dirección geolocalizada con éxito.', 'success');
+      } else {
+        const queryFallback = encodeURIComponent(`${address}, Ushuaia`);
+        const resFb = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${queryFallback}&limit=1`);
+        const dataFb = await resFb.json();
+        if (dataFb && dataFb.length > 0) {
+          const { lat, lon } = dataFb[0];
+          setPropForm(prev => ({
+            ...prev,
+            latitud: parseFloat(lat).toFixed(8),
+            longitud: parseFloat(lon).toFixed(8)
+          }));
+          showToast('Dirección geolocalizada con éxito.', 'success');
+        } else {
+          showToast('No se encontró la ubicación exacta. Centrando mapa en Ushuaia para corrección manual.', 'warning');
+          setPropForm(prev => ({
+            ...prev,
+            latitud: '-54.8019',
+            longitud: '-68.303'
+          }));
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error de red al geolocalizar.', 'error');
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
+  const handleAddressBlur = () => {
+    if (propForm.direccion && (!propForm.latitud || !propForm.longitud)) {
+      geocodeAddress();
+    }
+  };
+
   // Form submit handlers
   const handlePropSubmit = async (e) => {
     e.preventDefault();
@@ -149,6 +259,8 @@ const Dashboard = () => {
     formData.append('descripcion', propForm.descripcion);
     formData.append('tipo', propForm.tipo || 'Venta');
     formData.append('moneda', propForm.moneda || 'USD');
+    if (propForm.latitud) formData.append('latitud', propForm.latitud);
+    if (propForm.longitud) formData.append('longitud', propForm.longitud);
 
     for (let i = 0; i < selectedFiles.length; i++) {
       formData.append('images', selectedFiles[i]);
@@ -183,7 +295,9 @@ const Dashboard = () => {
         m2: '',
         descripcion: '',
         tipo: 'Venta',
-        moneda: 'USD'
+        moneda: 'USD',
+        latitud: '',
+        longitud: ''
       });
       setSelectedFiles([]);
       setEditingPropId(null);
@@ -312,7 +426,9 @@ const Dashboard = () => {
         m2: prop.m2,
         descripcion: prop.descripcion || '',
         tipo: prop.tipo || 'Venta',
-        moneda: prop.moneda || 'USD'
+        moneda: prop.moneda || 'USD',
+        latitud: prop.latitud ? prop.latitud.toString() : '',
+        longitud: prop.longitud ? prop.longitud.toString() : ''
       });
     setActiveTab('cargar-propiedad');
   };
@@ -515,15 +631,67 @@ const Dashboard = () => {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="prop-direccion">Dirección Física</label>
-                <input
-                  id="prop-direccion"
-                  type="text"
-                  value={propForm.direccion}
-                  onChange={(e) => setPropForm(prev => ({ ...prev, direccion: e.target.value }))}
-                  className="form-control"
-                  placeholder="Ej. Av. Alem 1420, Ushuaia"
-                  required
-                />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    id="prop-direccion"
+                    type="text"
+                    value={propForm.direccion}
+                    onChange={(e) => setPropForm(prev => ({ ...prev, direccion: e.target.value }))}
+                    onBlur={handleAddressBlur}
+                    className="form-control"
+                    placeholder="Ej. Av. Alem 1420, Ushuaia"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={geocodeAddress}
+                    disabled={geocoding}
+                    className="btn-secondary"
+                    style={{ whiteSpace: 'nowrap', padding: '0 16px' }}
+                  >
+                    {geocoding ? 'Buscando...' : 'Geolocalizar'}
+                  </button>
+                </div>
+                {propForm.latitud && propForm.longitud && (
+                  <div style={{ marginTop: '16px', marginBottom: '8px' }}>
+                    <span className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600 }}>
+                      Ubicación en el Mapa (Arrastra el marcador rojo para corregir con precisión):
+                    </span>
+                    <div style={{ height: '250px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)', position: 'relative', zIndex: 10 }}>
+                      <MapContainer
+                        center={[parseFloat(propForm.latitud), parseFloat(propForm.longitud)]}
+                        zoom={15}
+                        style={{ width: '100%', height: '100%' }}
+                      >
+                        <TileLayer
+                          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        />
+                        <Marker
+                          position={[parseFloat(propForm.latitud), parseFloat(propForm.longitud)]}
+                          draggable={true}
+                          icon={miniMapIcon}
+                          eventHandlers={{
+                            dragend: (e) => {
+                              const marker = e.target;
+                              const position = marker.getLatLng();
+                              setPropForm(prev => ({
+                                ...prev,
+                                latitud: position.lat.toFixed(8),
+                                longitud: position.lng.toFixed(8)
+                              }));
+                            }
+                          }}
+                        />
+                        <MiniMapRecenter lat={parseFloat(propForm.latitud)} lng={parseFloat(propForm.longitud)} />
+                      </MapContainer>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', display: 'flex', gap: '16px' }}>
+                      <span>Latitud: <strong>{propForm.latitud}</strong></span>
+                      <span>Longitud: <strong>{propForm.longitud}</strong></span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="db-form-row">

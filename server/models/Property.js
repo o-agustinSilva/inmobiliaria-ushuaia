@@ -56,6 +56,14 @@ const Property = sequelize.define('Property', {
     type: DataTypes.ENUM('ARS', 'USD'),
     allowNull: false,
     defaultValue: 'USD'
+  },
+  latitud: {
+    type: DataTypes.DECIMAL(10, 8),
+    allowNull: true
+  },
+  longitud: {
+    type: DataTypes.DECIMAL(11, 8),
+    allowNull: true
   }
 }, {
   timestamps: true

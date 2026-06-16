@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 import PropertyCard from '../components/PropertyCard';
-import { Search, SlidersHorizontal, Mountain, Star, ShieldCheck } from 'lucide-react';
+import PropertyMap from '../components/PropertyMap';
+import { Search, SlidersHorizontal } from 'lucide-react';
 
 const Home = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -271,42 +272,8 @@ const Home = () => {
         )}
       </section>
 
-      {/* Ushuaia Section */}
-      <section style={{ backgroundColor: 'var(--bg-secondary)', padding: '60px 0', borderTop: '1px solid var(--border-color)' }}>
-        <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', textAlign: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'rgba(14, 74, 71, 0.05)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--primary-color)' }}>
-                <Mountain size={28} />
-              </div>
-              <h3 style={{ fontWeight: 700, fontSize: '18px' }}>El Fin del Mundo</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '300px' }}>
-                Ushuaia ofrece paisajes inigualables entre montañas y el mar. Vivir aquí es una experiencia única y natural.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'rgba(14, 74, 71, 0.05)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--primary-color)' }}>
-                <Star size={28} />
-              </div>
-              <h3 style={{ fontWeight: 700, fontSize: '18px' }}>Asesoramiento Premium</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '300px' }}>
-                Martilleros matriculados dedicados a encontrar tu propiedad ideal o ayudarte a concretar la mejor venta.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'rgba(14, 74, 71, 0.05)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--primary-color)' }}>
-                <ShieldCheck size={28} />
-              </div>
-              <h3 style={{ fontWeight: 700, fontSize: '18px' }}>Seguridad Jurídica</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '300px' }}>
-                Operaciones transparentes y contratos sólidos avalados por profesionales de amplia trayectoria local.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Interactive Property Map */}
+      <PropertyMap properties={properties} />
     </div>
   );
 };
