@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Home, Building2, UserCircle2, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
+import { smoothScrollTo } from '../utils/scroll';
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -36,7 +37,13 @@ const Header = () => {
   const activeTabName = getActiveTab();
 
   const handleTabClick = (tab) => {
-    navigate(tab.path);
+    const currentPath = decodeURIComponent(location.pathname + location.search);
+    const targetPath = decodeURIComponent(tab.path);
+    if (currentPath === targetPath) {
+      smoothScrollTo(0, 600);
+    } else {
+      navigate(tab.path);
+    }
   };
 
   return (
