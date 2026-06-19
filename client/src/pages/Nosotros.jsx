@@ -3,10 +3,25 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Compass, Award, ArrowRight, Mountain } from 'lucide-react';
 
 const Nosotros = () => {
+  // Imagen del faro de Ushuaia optimizada mediante parámetros de Unsplash:
+  // - auto=format: sirve en formato WebP/AVIF (máxima compresión).
+  // - fit=crop y w=1600: dimensiones balanceadas para banner de pantalla completa.
+  // - q=80: compresión ideal para carga veloz.
+  // URL limpia y optimizada del faro
+  const heroBgImage = "https://images.unsplash.com/photo-1615656637621-5aa19f1ef847?q=80&w=1600&auto=format&fit=crop";
+
   return (
     <div className="nosotros-page">
       {/* Hero Section */}
-      <section className="nosotros-hero">
+      <section
+        className="nosotros-hero"
+        style={{
+          backgroundImage: `linear-gradient(135deg, rgba(14, 74, 71, 0.8) 0%, rgba(6, 38, 36, 0.85) 100%), url(${heroBgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 32%', // Desplaza ligeramente la imagen hacia abajo para encuadrar el faro
+          backgroundAttachment: 'scroll'
+        }}
+      >
         <div className="container">
           <div className="nosotros-hero-content">
             <div className="nosotros-badge">Sobre Nosotros</div>

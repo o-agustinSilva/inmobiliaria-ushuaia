@@ -1382,7 +1382,7 @@ main {
   position: relative;
   background: linear-gradient(135deg, var(--primary-color) 0%, #062624 100%);
   color: var(--text-light);
-  padding: 100px 0 120px 0;
+  padding: 130px 0 120px 0;
   text-align: center;
   overflow: hidden;
 }
