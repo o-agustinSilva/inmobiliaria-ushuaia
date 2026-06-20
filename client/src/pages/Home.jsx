@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 import PropertyCard from '../components/PropertyCard';
 import PropertyMap from '../components/PropertyMap';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, RotateCcw } from 'lucide-react';
 
 const Home = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,43 +12,14 @@ const Home = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Absolute max prices calculated from DB properties
-  const [maxPrices, setMaxPrices] = useState({ USD: 500000, ARS: 5000000 });
-  const [maxPricesLoaded, setMaxPricesLoaded] = useState(false);
-
   const [filters, setFilters] = useState({
     search: '',
     dormitorios: '',
+    minPrecio: '',
     maxPrecio: '',
     tipo: '',
     moneda: '' // Default empty to show both USD and ARS initially
   });
-
-  // Fetch all properties on mount once to find the dynamic maximum price bounds
-  useEffect(() => {
-    const fetchMaxBounds = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/properties`);
-        if (res.ok) {
-          const data = await res.json();
-          const usdPrices = data.filter(p => p.moneda === 'USD' && p.estado === 'Aprobado').map(p => parseFloat(p.precio));
-          const arsPrices = data.filter(p => p.moneda === 'ARS' && p.estado === 'Aprobado').map(p => parseFloat(p.precio));
-
-          const maxUsd = usdPrices.length > 0 ? Math.max(...usdPrices) : 500000;
-          const maxArs = arsPrices.length > 0 ? Math.max(...arsPrices) : 5000000;
-
-          setMaxPrices({
-            USD: Math.ceil(maxUsd / 10000) * 10000,
-            ARS: Math.ceil(maxArs / 50000) * 50000
-          });
-          setMaxPricesLoaded(true);
-        }
-      } catch (e) {
-        console.error("Error fetching max price bounds:", e);
-      }
-    };
-    fetchMaxBounds();
-  }, []);
 
   // Synchronize state when URL parameters (tipo) change
   useEffect(() => {
@@ -59,7 +30,8 @@ const Home = () => {
       ...prev,
       tipo: newTipo,
       moneda: newMoneda,
-      maxPrecio: '' // Reset price filter when type changes
+      minPrecio: '',
+      maxPrecio: '' // Reset price filters when type changes
     }));
 
     if (tipoParam) {
@@ -80,12 +52,8 @@ const Home = () => {
       if (filters.dormitorios) queryParams.append('dormitorios', filters.dormitorios);
       if (filters.tipo) queryParams.append('tipo', filters.tipo);
       if (filters.moneda) queryParams.append('moneda', filters.moneda);
-
-      const activeCurrency = filters.moneda || 'USD';
-      const maxLimit = maxPrices[activeCurrency] || 500000;
-      if (filters.maxPrecio && parseFloat(filters.maxPrecio) < maxLimit) {
-        queryParams.append('maxPrecio', filters.maxPrecio);
-      }
+      if (filters.minPrecio) queryParams.append('minPrecio', filters.minPrecio);
+      if (filters.maxPrecio) queryParams.append('maxPrecio', filters.maxPrecio);
 
       const res = await fetch(`${API_BASE_URL}/properties?${queryParams.toString()}`);
       const data = await res.json();
@@ -100,9 +68,8 @@ const Home = () => {
   };
 
   useEffect(() => {
-    // Wait until the max prices are resolved before fetching the catalog to avoid partial/wrong bounds
     fetchProperties();
-  }, [filters, maxPricesLoaded]);
+  }, [filters]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -114,6 +81,7 @@ const Home = () => {
         ...prev,
         tipo: value,
         moneda: matchingMoneda,
+        minPrecio: '',
         maxPrecio: ''
       }));
     } else {
@@ -121,36 +89,44 @@ const Home = () => {
     }
   };
 
-  const activeCurrency = filters.moneda || 'USD';
-  const sliderMaxVal = maxPrices[activeCurrency] || 500000;
-  const activePriceValue = filters.maxPrecio === '' ? sliderMaxVal : parseFloat(filters.maxPrecio);
-
-  const handleSliderChange = (e) => {
-    const val = parseFloat(e.target.value);
-    if (val >= sliderMaxVal) {
-      setFilters(prev => ({ ...prev, maxPrecio: '' })); // No limit
-    } else {
-      // If the slider is manually moved, activate the currency filter for that currency
-      setFilters(prev => ({ ...prev, maxPrecio: val, moneda: activeCurrency }));
-    }
+  const handleClearFilters = () => {
+    setSearchParams({});
+    setFilters({
+      search: '',
+      dormitorios: '',
+      minPrecio: '',
+      maxPrecio: '',
+      tipo: '',
+      moneda: ''
+    });
   };
+
+  const hasActiveFilters = filters.search !== '' ||
+                           filters.dormitorios !== '' ||
+                           filters.minPrecio !== '' ||
+                           filters.maxPrecio !== '' ||
+                           filters.tipo !== '';
+
+  const activeCurrency = filters.moneda || 'USD';
 
   return (
     <div className="home-page">
-      {/* Hero Header */}
+      {/* Hero Header compacto con diseño diagonal asimétrico */}
       <section className="hero-section">
         <div className="container">
-          <h1 className="hero-title">Encontrá tu hogar en el Fin del Mundo</h1>
-          <p className="hero-subtitle">
-            Casas, departamentos y cabañas con las mejores vistas del Canal Beagle y la cordillera en Ushuaia.
-          </p>
+          <div className="hero-left-content">
+            <h1 className="hero-title">Encontrá tu hogar en el Fin del Mundo</h1>
+            <p className="hero-subtitle">
+              Casas, departamentos y cabañas con las mejores vistas en Ushuaia.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Filter Bar */}
+      {/* Barra de Filtros y Búsqueda */}
       <div className="container" style={{ position: 'relative', zIndex: 10 }}>
         <div className="filter-bar" id="filter-bar">
-          <div className="filter-group">
+          <div className="filter-group search-group">
             <span className="filter-label">Buscar</span>
             <div style={{ position: 'relative' }}>
               <input
@@ -197,48 +173,64 @@ const Home = () => {
             </select>
           </div>
 
-          <div className="filter-group filter-price-slider">
+          {/* Rango de Precios Numérico (Mínimo / Máximo) */}
+          <div className="filter-group price-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span className="filter-label">Precio Máximo</span>
+              <span className="filter-label">Rango de Precio</span>
               <div className="currency-toggle-group">
                 <button
                   type="button"
                   className={`currency-btn ${activeCurrency === 'USD' ? 'active' : ''}`}
-                  onClick={() => setFilters(prev => ({ ...prev, moneda: 'USD', maxPrecio: '' }))}
+                  onClick={() => setFilters(prev => ({ ...prev, moneda: 'USD' }))}
                 >
                   USD
                 </button>
                 <button
                   type="button"
                   className={`currency-btn ${activeCurrency === 'ARS' ? 'active' : ''}`}
-                  onClick={() => setFilters(prev => ({ ...prev, moneda: 'ARS', maxPrecio: '' }))}
+                  onClick={() => setFilters(prev => ({ ...prev, moneda: 'ARS' }))}
                 >
                   ARS
                 </button>
               </div>
             </div>
-            <div className="price-slider-wrapper">
+            <div className="price-range-inputs">
               <input
-                type="range"
-                min={0}
-                max={sliderMaxVal}
-                step={activeCurrency === 'USD' ? 10000 : 50000}
-                value={activePriceValue}
-                onChange={handleSliderChange}
-                className="price-slider"
+                type="number"
+                name="minPrecio"
+                value={filters.minPrecio}
+                onChange={handleFilterChange}
+                placeholder="Mínimo"
+                className="filter-input"
               />
-              <div className="price-slider-values">
-                <span className="price-slider-current">
-                  {filters.maxPrecio === '' ? 'Cualquier precio' : `Hasta ${activeCurrency === 'USD' ? 'USD $' : '$'}${parseFloat(filters.maxPrecio).toLocaleString('es-AR')}`}
-                </span>
-              </div>
+              <span className="price-range-separator">-</span>
+              <input
+                type="number"
+                name="maxPrecio"
+                value={filters.maxPrecio}
+                onChange={handleFilterChange}
+                placeholder="Máximo"
+                className="filter-input"
+              />
             </div>
           </div>
+
+          {/* Botón de Limpiar Filtros */}
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            disabled={!hasActiveFilters}
+            className="btn-clear-filters"
+            title="Limpiar todos los filtros"
+          >
+            <RotateCcw size={16} />
+            <span>Limpiar Filtros</span>
+          </button>
         </div>
       </div>
 
-      {/* Catalog Grid */}
-      <section className="container-wide" id="catalog-section" style={{ minHeight: '300px' }}>
+      {/* Sección del Catálogo (Ancho Completo) */}
+      <section className="container-wide" id="catalog-section" style={{ minHeight: '300px', marginTop: '24px' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '24px' }}>
           Propiedades Destacadas
         </h2>
@@ -253,10 +245,7 @@ const Home = () => {
             <SlidersHorizontal size={40} style={{ margin: '0 auto 16px auto', display: 'block', strokeWidth: 1.5 }} />
             <p style={{ fontSize: '16px' }}>No encontramos propiedades que coincidan con tu búsqueda.</p>
             <button
-              onClick={() => {
-                setSearchParams({});
-                setFilters({ search: '', dormitorios: '', maxPrecio: '', tipo: '', moneda: '' });
-              }}
+              onClick={handleClearFilters}
               className="btn-secondary"
               style={{ marginTop: '16px' }}
             >
