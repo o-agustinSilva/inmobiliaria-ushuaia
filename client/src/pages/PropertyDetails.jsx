@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
 import ContactForm from '../components/ContactForm';
-import { MapPin, BedDouble, Bath, Maximize, ArrowLeft, Calendar, Phone, Mail, Award } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Maximize, ArrowLeft, Calendar, Phone, Mail, Award, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import L from 'leaflet';
 
 const PropertyDetails = () => {
@@ -11,8 +11,44 @@ const PropertyDetails = () => {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const mapInitializedRef = useRef(false);
   const mapRef = useRef(null);
+
+  const openLightbox = (index) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+    document.body.style.overflow = '';
+  };
+
+  const nextImage = () => {
+    setLightboxIndex((prev) => (prev + 1) % imagesList.length);
+  };
+
+  const prevImage = () => {
+    setLightboxIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isLightboxOpen) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isLightboxOpen, property]);
 
   // Helper for resolving image urls
   const getImageUrl = (url) => {
@@ -129,11 +165,17 @@ const PropertyDetails = () => {
         <div className="details-main-col">
           {/* Gallery Carousel */}
           <div className="gallery-container">
-            <img 
-              src={getImageUrl(mainImage.url)} 
-              alt={property.titulo} 
-              className="gallery-main-img" 
-            />
+            <div className="gallery-main-wrapper" onClick={() => openLightbox(activeImageIndex)}>
+              <img 
+                src={getImageUrl(mainImage.url)} 
+                alt={property.titulo} 
+                className="gallery-main-img" 
+              />
+              <div className="gallery-zoom-overlay">
+                <Maximize size={20} />
+                <span>Ver pantalla completa</span>
+              </div>
+            </div>
             {imagesList.length > 1 && (
               <div className="gallery-thumbs">
                 {imagesList.map((img, index) => (
@@ -142,7 +184,10 @@ const PropertyDetails = () => {
                     src={getImageUrl(img.url)}
                     alt={`${property.titulo} thumbnail ${index + 1}`}
                     className={`gallery-thumb ${activeImageIndex === index ? 'active' : ''}`}
-                    onClick={() => setActiveImageIndex(index)}
+                    onClick={() => {
+                      setActiveImageIndex(index);
+                      openLightbox(index);
+                    }}
                   />
                 ))}
               </div>
@@ -242,6 +287,48 @@ const PropertyDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && (
+        <div className="lightbox-overlay" onClick={closeLightbox}>
+          <button className="lightbox-close-btn" onClick={closeLightbox} aria-label="Cerrar">
+            <X size={28} />
+          </button>
+          
+          {imagesList.length > 1 && (
+            <button 
+              className="lightbox-nav-btn prev" 
+              onClick={(e) => { e.stopPropagation(); prevImage(); }}
+              aria-label="Imagen anterior"
+            >
+              <ChevronLeft size={36} />
+            </button>
+          )}
+          
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={getImageUrl(imagesList[lightboxIndex].url)} 
+              alt={`${property.titulo} pantalla completa ${lightboxIndex + 1}`} 
+              className="lightbox-img" 
+            />
+            {imagesList.length > 1 && (
+              <div className="lightbox-counter">
+                {lightboxIndex + 1} / {imagesList.length}
+              </div>
+            )}
+          </div>
+          
+          {imagesList.length > 1 && (
+            <button 
+              className="lightbox-nav-btn next" 
+              onClick={(e) => { e.stopPropagation(); nextImage(); }}
+              aria-label="Siguiente imagen"
+            >
+              <ChevronRight size={36} />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
