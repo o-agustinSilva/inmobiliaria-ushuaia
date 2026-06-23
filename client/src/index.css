@@ -716,6 +716,10 @@ main {
   padding: 5px 0 80px 0;
 }
 
+.details-main-col {
+  min-width: 0;
+}
+
 /* Galería de Imágenes */
 .gallery-container {
   position: relative;
@@ -1046,12 +1050,67 @@ main {
 }
 
 
+.gallery-thumbs-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  width: 100%;
+}
+
 .gallery-thumbs {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.gallery-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.thumb-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--border-color);
+  color: var(--primary-color);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.thumb-nav-btn.prev {
+  left: 8px;
+}
+
+.thumb-nav-btn.next {
+  right: 8px;
+}
+
+.thumb-nav-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.thumb-nav-btn:hover {
+  background: var(--primary-color);
+  color: #fff;
+  transform: translateY(-50%) scale(1.1);
 }
 
 .gallery-thumb {
@@ -1062,6 +1121,7 @@ main {
   cursor: pointer;
   opacity: 0.6;
   transition: var(--transition-smooth);
+  flex-shrink: 0;
 }
 
 .gallery-thumb.active,

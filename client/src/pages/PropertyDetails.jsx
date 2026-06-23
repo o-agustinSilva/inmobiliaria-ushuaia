@@ -15,6 +15,66 @@ const PropertyDetails = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const mapInitializedRef = useRef(false);
   const mapRef = useRef(null);
+  
+  const thumbsRef = useRef(null);
+  const [showPrevBtn, setShowPrevBtn] = useState(false);
+  const [showNextBtn, setShowNextBtn] = useState(false);
+
+  // States and variables for swiping in lightbox
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;
+
+  const checkScrollLimits = () => {
+    if (thumbsRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = thumbsRef.current;
+      setShowPrevBtn(scrollLeft > 2);
+      setShowNextBtn(scrollLeft < scrollWidth - clientWidth - 2);
+    }
+  };
+
+  const scrollThumbsLeft = () => {
+    if (thumbsRef.current) {
+      thumbsRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollThumbsRight = () => {
+    if (thumbsRef.current) {
+      thumbsRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      nextImage();
+    } else if (isRightSwipe) {
+      prevImage();
+    }
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains('lightbox-overlay')) {
+      if (touchStart && touchEnd && Math.abs(touchStart - touchEnd) > 10) {
+        return;
+      }
+      closeLightbox();
+    }
+  };
 
   const openLightbox = (index) => {
     setLightboxIndex(index);
@@ -49,6 +109,25 @@ const PropertyDetails = () => {
       document.body.style.overflow = '';
     };
   }, [isLightboxOpen, property]);
+
+  useEffect(() => {
+    checkScrollLimits();
+    
+    const thumbsEl = thumbsRef.current;
+    if (thumbsEl) {
+      thumbsEl.addEventListener('scroll', checkScrollLimits);
+      window.addEventListener('resize', checkScrollLimits);
+      
+      const observer = new ResizeObserver(checkScrollLimits);
+      observer.observe(thumbsEl);
+      
+      return () => {
+        thumbsEl.removeEventListener('scroll', checkScrollLimits);
+        window.removeEventListener('resize', checkScrollLimits);
+        observer.disconnect();
+      };
+    }
+  }, [property, loading]);
 
   // Helper for resolving image urls
   const getImageUrl = (url) => {
@@ -177,18 +256,38 @@ const PropertyDetails = () => {
               </div>
             </div>
             {imagesList.length > 1 && (
-              <div className="gallery-thumbs">
-                {imagesList.map((img, index) => (
-                  <img
-                    key={img.id || index}
-                    src={getImageUrl(img.url)}
-                    alt={`${property.titulo} thumbnail ${index + 1}`}
-                    className={`gallery-thumb ${activeImageIndex === index ? 'active' : ''}`}
-                    onClick={() => {
-                      openLightbox(index);
-                    }}
-                  />
-                ))}
+              <div className="gallery-thumbs-container">
+                <button 
+                  className={`thumb-nav-btn prev ${showPrevBtn ? 'visible' : ''}`}
+                  onClick={scrollThumbsLeft}
+                  aria-label="Imagen anterior"
+                  type="button"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                <div className="gallery-thumbs" ref={thumbsRef}>
+                  {imagesList.map((img, index) => (
+                    <img
+                      key={img.id || index}
+                      src={getImageUrl(img.url)}
+                      alt={`${property.titulo} thumbnail ${index + 1}`}
+                      className={`gallery-thumb ${activeImageIndex === index ? 'active' : ''}`}
+                      onClick={() => {
+                        openLightbox(index);
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <button 
+                  className={`thumb-nav-btn next ${showNextBtn ? 'visible' : ''}`}
+                  onClick={scrollThumbsRight}
+                  aria-label="Siguiente imagen"
+                  type="button"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             )}
           </div>
@@ -289,7 +388,13 @@ const PropertyDetails = () => {
 
       {/* Lightbox Modal */}
       {isLightboxOpen && (
-        <div className="lightbox-overlay" onClick={closeLightbox}>
+        <div 
+          className="lightbox-overlay" 
+          onClick={handleOverlayClick}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {imagesList.length > 1 && (
             <div 
               className="lightbox-nav-zone prev" 
