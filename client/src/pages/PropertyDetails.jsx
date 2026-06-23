@@ -10,7 +10,7 @@ const PropertyDetails = () => {
   const { showToast } = useAuth();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const activeImageIndex = 0;
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const mapInitializedRef = useRef(false);
@@ -185,7 +185,6 @@ const PropertyDetails = () => {
                     alt={`${property.titulo} thumbnail ${index + 1}`}
                     className={`gallery-thumb ${activeImageIndex === index ? 'active' : ''}`}
                     onClick={() => {
-                      setActiveImageIndex(index);
                       openLightbox(index);
                     }}
                   />
@@ -291,19 +290,43 @@ const PropertyDetails = () => {
       {/* Lightbox Modal */}
       {isLightboxOpen && (
         <div className="lightbox-overlay" onClick={closeLightbox}>
+          {imagesList.length > 1 && (
+            <div 
+              className="lightbox-nav-zone prev" 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                prevImage(); 
+              }}
+            >
+              <button 
+                className="lightbox-nav-btn prev" 
+                aria-label="Imagen anterior"
+              >
+                <ChevronLeft size={42} />
+              </button>
+            </div>
+          )}
+
+          {imagesList.length > 1 && (
+            <div 
+              className="lightbox-nav-zone next" 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                nextImage(); 
+              }}
+            >
+              <button 
+                className="lightbox-nav-btn next" 
+                aria-label="Siguiente imagen"
+              >
+                <ChevronRight size={42} />
+              </button>
+            </div>
+          )}
+
           <button className="lightbox-close-btn" onClick={closeLightbox} aria-label="Cerrar">
             <X size={28} />
           </button>
-          
-          {imagesList.length > 1 && (
-            <button 
-              className="lightbox-nav-btn prev" 
-              onClick={(e) => { e.stopPropagation(); prevImage(); }}
-              aria-label="Imagen anterior"
-            >
-              <ChevronLeft size={36} />
-            </button>
-          )}
           
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img 
@@ -317,15 +340,23 @@ const PropertyDetails = () => {
               </div>
             )}
           </div>
-          
+
+          {/* Mini carousel inside lightbox */}
           {imagesList.length > 1 && (
-            <button 
-              className="lightbox-nav-btn next" 
-              onClick={(e) => { e.stopPropagation(); nextImage(); }}
-              aria-label="Siguiente imagen"
-            >
-              <ChevronRight size={36} />
-            </button>
+            <div className="lightbox-thumbs-carousel" onClick={(e) => e.stopPropagation()}>
+              {imagesList.map((img, index) => (
+                <img
+                  key={img.id || index}
+                  src={getImageUrl(img.url)}
+                  alt={`Preview ${index + 1}`}
+                  className={`lightbox-thumb-preview ${lightboxIndex === index ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxIndex(index);
+                  }}
+                />
+              ))}
+            </div>
           )}
         </div>
       )}
