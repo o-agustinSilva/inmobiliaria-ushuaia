@@ -46,27 +46,25 @@ const PropertyCard = ({ property }) => {
           className="card-img" 
           loading="lazy" // Performance photo optimization: Lazy loading
         />
-        {isSoldOrRented && (
+        {isSoldOrRented ? (
           <div className="card-overlay-blur">
             <span className="overlay-status-text">{displayStatus}</span>
+          </div>
+        ) : (
+          <div className="card-image-badges">
+            <span className={`card-image-badge ${getTipoClass(tipo)}`}>
+              {tipo || 'Venta'}
+            </span>
+            {estado !== 'Aprobado' && (
+              <span className={`card-image-badge ${statusClasses[estado]}`}>
+                {estado}
+              </span>
+            )}
           </div>
         )}
       </Link>
 
       <div className="card-content">
-        <div className="card-header-row">
-          <div className="card-tags-group">
-            <span className={`card-content-badge ${getTipoClass(tipo)}`}>
-              {tipo || 'Venta'}
-            </span>
-            {estado !== 'Aprobado' && (
-              <span className={`card-content-badge ${statusClasses[estado]}`}>
-                {estado}
-              </span>
-            )}
-          </div>
-        </div>
-
         <h3 className="card-title">
           <Link to={`/property/${id}`}>{titulo}</Link>
         </h3>
