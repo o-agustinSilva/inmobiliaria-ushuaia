@@ -2,15 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, BedDouble, Bath, Maximize } from 'lucide-react';
 
-const getTipoColor = (tipo) => {
+const getTipoClass = (tipo) => {
   switch (tipo) {
     case 'Alquiler':
-      return '#0e4a47'; // var(--primary-color)
+      return 'badge-tipo-alquiler';
     case 'Venta en pozo':
-      return '#e29578'; // var(--secondary-color)
+      return 'badge-tipo-pozo';
     case 'Venta':
     default:
-      return '#2d3748'; // dark charcoal
+      return 'badge-tipo-venta';
   }
 };
 
@@ -46,30 +46,27 @@ const PropertyCard = ({ property }) => {
           className="card-img" 
           loading="lazy" // Performance photo optimization: Lazy loading
         />
-        {isSoldOrRented ? (
+        {isSoldOrRented && (
           <div className="card-overlay-blur">
             <span className="overlay-status-text">{displayStatus}</span>
           </div>
-        ) : (
-          <>
-            <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', gap: '8px', zIndex: 2 }}>
-              <span style={{ backgroundColor: getTipoColor(tipo), color: '#fff', fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                {tipo || 'Venta'}
-              </span>
-              {estado !== 'Aprobado' && (
-                <span className={statusClasses[estado]} style={{ color: '#fff', fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-                  {estado}
-                </span>
-              )}
-            </div>
-            <div className="card-price-tag">
-              {moneda === 'USD' ? 'USD $' : '$'}{Number(precio).toLocaleString('es-AR')}
-            </div>
-          </>
         )}
       </Link>
 
       <div className="card-content">
+        <div className="card-header-row">
+          <div className="card-tags-group">
+            <span className={`card-content-badge ${getTipoClass(tipo)}`}>
+              {tipo || 'Venta'}
+            </span>
+            {estado !== 'Aprobado' && (
+              <span className={`card-content-badge ${statusClasses[estado]}`}>
+                {estado}
+              </span>
+            )}
+          </div>
+        </div>
+
         <h3 className="card-title">
           <Link to={`/property/${id}`}>{titulo}</Link>
         </h3>
@@ -92,6 +89,10 @@ const PropertyCard = ({ property }) => {
             <Maximize size={16} />
             <span>{m2} m²</span>
           </div>
+        </div>
+
+        <div className="card-price-bottom">
+          {moneda === 'USD' ? 'USD $' : '$'}{Number(precio).toLocaleString('es-AR')}
         </div>
       </div>
     </article>

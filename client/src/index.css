@@ -608,16 +608,49 @@ main {
   background-color: var(--status-vendido);
 }
 
-.card-price-tag {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  background-color: var(--primary-color);
-  color: var(--text-light);
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
+/* Card header tags row */
+.card-header-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.card-tags-group {
+  display: flex;
+  gap: 8px;
+}
+
+.card-content-badge {
+  color: #fff;
+  font-size: 11px;
   font-weight: 700;
-  font-size: 16px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.badge-tipo-venta {
+  background-color: #2d3748;
+}
+
+.badge-tipo-alquiler {
+  background-color: var(--primary-color);
+}
+
+.badge-tipo-pozo {
+  background-color: var(--secondary-color);
+}
+
+/* Price at the bottom of the card, below amenities */
+.card-price-bottom {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-top: 12px;
 }
 
 /* Contenido de la Tarjeta */
