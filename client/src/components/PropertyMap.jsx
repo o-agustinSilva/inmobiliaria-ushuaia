@@ -142,6 +142,7 @@ const PropertyMap = ({ properties }) => {
             center={[-54.8019, -68.303]} // Ushuaia Center coordinates
             zoom={13}
             zoomControl={true}
+            attributionControl={false}
             className="mapa-element"
           >
             <TileLayer
@@ -170,7 +171,7 @@ const PropertyMap = ({ properties }) => {
                 onClose={() => setActiveProperty(null)}
                 closeOnClick={false}
               >
-                <div 
+                <div
                   className="map-popup-card"
                   onClick={() => navigate(`/property/${activeProperty.id}`)}
                 >

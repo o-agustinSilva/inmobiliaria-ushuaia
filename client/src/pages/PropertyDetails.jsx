@@ -1,133 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../context/AuthContext';
-import ContactForm from '../components/ContactForm';
-import { MapPin, BedDouble, Bath, Maximize, ArrowLeft, Calendar, Phone, Mail, Award, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, ArrowLeft } from 'lucide-react';
 import L from 'leaflet';
+import PropertyGallery from '../components/PropertyGallery';
+import PropertyLightbox from '../components/PropertyLightbox';
+import PropertyAmenities from '../components/PropertyAmenities';
+import AgentSidebar from '../components/AgentSidebar';
 
 const PropertyDetails = () => {
   const { id } = useParams();
   const { showToast } = useAuth();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
-  const activeImageIndex = 0;
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxInitialIndex, setLightboxInitialIndex] = useState(0);
   const mapInitializedRef = useRef(false);
   const mapRef = useRef(null);
-  
-  const thumbsRef = useRef(null);
-  const [showPrevBtn, setShowPrevBtn] = useState(false);
-  const [showNextBtn, setShowNextBtn] = useState(false);
-
-  // States and variables for swiping in lightbox
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
-  const minSwipeDistance = 50;
-
-  const checkScrollLimits = () => {
-    if (thumbsRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = thumbsRef.current;
-      setShowPrevBtn(scrollLeft > 2);
-      setShowNextBtn(scrollLeft < scrollWidth - clientWidth - 2);
-    }
-  };
-
-  const scrollThumbsLeft = () => {
-    if (thumbsRef.current) {
-      thumbsRef.current.scrollBy({ left: -200, behavior: 'smooth' });
-    }
-  };
-
-  const scrollThumbsRight = () => {
-    if (thumbsRef.current) {
-      thumbsRef.current.scrollBy({ left: 200, behavior: 'smooth' });
-    }
-  };
-
-  const handleTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-    
-    if (isLeftSwipe) {
-      nextImage();
-    } else if (isRightSwipe) {
-      prevImage();
-    }
-  };
-
-  const handleOverlayClick = (e) => {
-    if (e.target.classList.contains('lightbox-overlay')) {
-      if (touchStart && touchEnd && Math.abs(touchStart - touchEnd) > 10) {
-        return;
-      }
-      closeLightbox();
-    }
-  };
 
   const openLightbox = (index) => {
-    setLightboxIndex(index);
+    setLightboxInitialIndex(index);
     setIsLightboxOpen(true);
-    document.body.style.overflow = 'hidden';
   };
 
   const closeLightbox = () => {
     setIsLightboxOpen(false);
-    document.body.style.overflow = '';
   };
-
-  const nextImage = () => {
-    setLightboxIndex((prev) => (prev + 1) % imagesList.length);
-  };
-
-  const prevImage = () => {
-    setLightboxIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!isLightboxOpen) return;
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowRight') nextImage();
-      if (e.key === 'ArrowLeft') prevImage();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [isLightboxOpen, property]);
-
-  useEffect(() => {
-    checkScrollLimits();
-    
-    const thumbsEl = thumbsRef.current;
-    if (thumbsEl) {
-      thumbsEl.addEventListener('scroll', checkScrollLimits);
-      window.addEventListener('resize', checkScrollLimits);
-      
-      const observer = new ResizeObserver(checkScrollLimits);
-      observer.observe(thumbsEl);
-      
-      return () => {
-        thumbsEl.removeEventListener('scroll', checkScrollLimits);
-        window.removeEventListener('resize', checkScrollLimits);
-        observer.disconnect();
-      };
-    }
-  }, [property, loading]);
 
   // Helper for resolving image urls
   const getImageUrl = (url) => {
@@ -170,7 +68,7 @@ const PropertyDetails = () => {
     }
 
     try {
-      const map = L.map('property-map').setView([lat, lng], 15);
+      const map = L.map('property-map', { attributionControl: false }).setView([lat, lng], 15);
       mapRef.current = map;
 
       // Use consistent voyager tiles matching Home map
@@ -229,7 +127,6 @@ const PropertyDetails = () => {
   }
 
   const imagesList = property.images && property.images.length > 0 ? property.images : [{ url: null }];
-  const mainImage = imagesList[activeImageIndex];
 
   return (
     <div className="container" style={{ paddingTop: '30px' }}>
@@ -243,54 +140,12 @@ const PropertyDetails = () => {
         {/* Main Details Area */}
         <div className="details-main-col">
           {/* Gallery Carousel */}
-          <div className="gallery-container">
-            <div className="gallery-main-wrapper" onClick={() => openLightbox(activeImageIndex)}>
-              <img 
-                src={getImageUrl(mainImage.url)} 
-                alt={property.titulo} 
-                className="gallery-main-img" 
-              />
-              <div className="gallery-zoom-overlay">
-                <Maximize size={20} />
-                <span>Ver pantalla completa</span>
-              </div>
-            </div>
-            {imagesList.length > 1 && (
-              <div className="gallery-thumbs-container">
-                <button 
-                  className={`thumb-nav-btn prev ${showPrevBtn ? 'visible' : ''}`}
-                  onClick={scrollThumbsLeft}
-                  aria-label="Imagen anterior"
-                  type="button"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                
-                <div className="gallery-thumbs" ref={thumbsRef}>
-                  {imagesList.map((img, index) => (
-                    <img
-                      key={img.id || index}
-                      src={getImageUrl(img.url)}
-                      alt={`${property.titulo} thumbnail ${index + 1}`}
-                      className={`gallery-thumb ${activeImageIndex === index ? 'active' : ''}`}
-                      onClick={() => {
-                        openLightbox(index);
-                      }}
-                    />
-                  ))}
-                </div>
-
-                <button 
-                  className={`thumb-nav-btn next ${showNextBtn ? 'visible' : ''}`}
-                  onClick={scrollThumbsRight}
-                  aria-label="Siguiente imagen"
-                  type="button"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
-          </div>
+          <PropertyGallery
+            imagesList={imagesList}
+            getImageUrl={getImageUrl}
+            propertyTitulo={property.titulo}
+            openLightbox={openLightbox}
+          />
 
           {/* Main Info */}
           <div className="detail-main-info">
@@ -313,23 +168,11 @@ const PropertyDetails = () => {
             </div>
 
             {/* Amenities Grid */}
-            <div className="detail-amenity-grid">
-              <div className="detail-amenity-card">
-                <BedDouble size={24} style={{ color: 'var(--primary-color)' }} />
-                <span className="detail-amenity-value">{property.dormitorios}</span>
-                <span className="detail-amenity-label">Dormitorios</span>
-              </div>
-              <div className="detail-amenity-card">
-                <Bath size={24} style={{ color: 'var(--primary-color)' }} />
-                <span className="detail-amenity-value">{property.banos}</span>
-                <span className="detail-amenity-label">Baños</span>
-              </div>
-              <div className="detail-amenity-card">
-                <Maximize size={24} style={{ color: 'var(--primary-color)' }} />
-                <span className="detail-amenity-value">{property.m2}</span>
-                <span className="detail-amenity-label">Metros (m²)</span>
-              </div>
-            </div>
+            <PropertyAmenities
+              dormitorios={property.dormitorios}
+              banos={property.banos}
+              m2={property.m2}
+            />
 
             <h2 className="detail-description-title">Descripción</h2>
             <p className="detail-description">
@@ -347,123 +190,21 @@ const PropertyDetails = () => {
         </div>
 
         {/* Sidebar Panel (Contact form and agent profile) */}
-        <div className="contact-sidebar">
-          {/* Agent details */}
-          <div className="sidebar-card" style={{ paddingBottom: '20px' }}>
-            <h3 className="sidebar-title" style={{ fontSize: '16px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Agente Responsable
-            </h3>
-            <div className="agent-profile">
-              <div className="agent-avatar">
-                {property.agent ? property.agent.nombre.charAt(0) : 'U'}
-              </div>
-              <div className="agent-info">
-                <span className="agent-name">{property.agent ? property.agent.nombre : 'Inmobiliaria Ushuaia'}</span>
-                <span className="agent-role">{property.agent ? property.agent.rol : 'Martillero Responsable'}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Phone size={14} />
-                <span>+54 2901 445588</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Mail size={14} />
-                <span>{property.agent ? property.agent.email : 'contacto@ushuaia.com'}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Award size={14} />
-                <span>Matrícula N° 846 TDF</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Form */}
-          <div className="sidebar-card">
-            <h3 className="sidebar-title">Contactar Agente</h3>
-            <ContactForm propertyId={property.id} />
-          </div>
-        </div>
+        <AgentSidebar
+          agent={property.agent}
+          propertyId={property.id}
+        />
       </div>
 
       {/* Lightbox Modal */}
       {isLightboxOpen && (
-        <div 
-          className="lightbox-overlay" 
-          onClick={handleOverlayClick}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {imagesList.length > 1 && (
-            <div 
-              className="lightbox-nav-zone prev" 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                prevImage(); 
-              }}
-            >
-              <button 
-                className="lightbox-nav-btn prev" 
-                aria-label="Imagen anterior"
-              >
-                <ChevronLeft size={42} />
-              </button>
-            </div>
-          )}
-
-          {imagesList.length > 1 && (
-            <div 
-              className="lightbox-nav-zone next" 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                nextImage(); 
-              }}
-            >
-              <button 
-                className="lightbox-nav-btn next" 
-                aria-label="Siguiente imagen"
-              >
-                <ChevronRight size={42} />
-              </button>
-            </div>
-          )}
-
-          <button className="lightbox-close-btn" onClick={closeLightbox} aria-label="Cerrar">
-            <X size={28} />
-          </button>
-          
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={getImageUrl(imagesList[lightboxIndex].url)} 
-              alt={`${property.titulo} pantalla completa ${lightboxIndex + 1}`} 
-              className="lightbox-img" 
-            />
-            {imagesList.length > 1 && (
-              <div className="lightbox-counter">
-                {lightboxIndex + 1} / {imagesList.length}
-              </div>
-            )}
-          </div>
-
-          {/* Mini carousel inside lightbox */}
-          {imagesList.length > 1 && (
-            <div className="lightbox-thumbs-carousel" onClick={(e) => e.stopPropagation()}>
-              {imagesList.map((img, index) => (
-                <img
-                  key={img.id || index}
-                  src={getImageUrl(img.url)}
-                  alt={`Preview ${index + 1}`}
-                  className={`lightbox-thumb-preview ${lightboxIndex === index ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightboxIndex(index);
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <PropertyLightbox
+          initialIndex={lightboxInitialIndex}
+          imagesList={imagesList}
+          getImageUrl={getImageUrl}
+          propertyTitulo={property.titulo}
+          onClose={closeLightbox}
+        />
       )}
     </div>
   );
