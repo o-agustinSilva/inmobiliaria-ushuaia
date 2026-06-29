@@ -175,14 +175,19 @@ const PropertyDetails = () => {
             />
 
             <h2 className="detail-description-title">Descripción</h2>
-            <p className="detail-description">
-              {property.descripcion || 'Sin descripción disponible por el momento.'}
-            </p>
+            {property.descripcion ? (
+              <div 
+                className="detail-description" 
+                dangerouslySetInnerHTML={{ __html: property.descripcion }}
+              />
+            ) : (
+              <p className="detail-description">Sin descripción disponible por el momento.</p>
+            )}
           </div>
 
           {/* Map Location */}
           <div className="map-section">
-            <h2 className="map-title">Ubicación aproximada</h2>
+            <h2 className="map-title">Ubicación</h2>
             <div className="map-wrapper">
               <div id="property-map" style={{ width: '100%', height: '100%' }}></div>
             </div>

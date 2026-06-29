@@ -643,6 +643,7 @@ main {
   align-items: center;
   gap: 6px;
   margin-bottom: 16px;
+  margin-top: auto; /* Empuja la dirección y las amenities al fondo */
 }
 
 .card-amenities {
@@ -650,7 +651,6 @@ main {
   gap: 16px;
   border-top: 1px solid var(--border-color);
   padding-top: 16px;
-  margin-top: auto;
   color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
@@ -1216,7 +1216,70 @@ main {
 
 .detail-description {
   color: var(--text-main);
-  line-height: 1.8;
+  line-height: 1.42;
+  white-space: pre-wrap;
+}
+
+.detail-description p {
+  margin: 0;
+  min-height: 1em;
+}
+
+.detail-description h1,
+.detail-description h2,
+.detail-description h3 {
+  color: var(--primary-color);
+  font-weight: 700;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.detail-description h1 {
+  font-size: 20px;
+}
+
+.detail-description h2 {
+  font-size: 18px;
+}
+
+.detail-description ul,
+.detail-description ol {
+  margin-left: 20px;
+  margin-bottom: 16px;
+}
+
+.detail-description li {
+  margin-bottom: 6px;
+}
+
+.detail-description strong {
+  font-weight: 700;
+}
+
+/* Quill Rich Text Editor Customizations */
+.ql-container.ql-snow {
+  border-color: var(--border-color) !important;
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+  background-color: var(--bg-primary);
+  font-family: var(--font-family) !important;
+  font-size: 14px !important;
+}
+
+.ql-toolbar.ql-snow {
+  border-color: var(--border-color) !important;
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+  background-color: var(--bg-secondary);
+}
+
+.ql-editor {
+  min-height: 150px;
+}
+
+.ql-editor.ql-blank::before {
+  color: var(--text-muted) !important;
+  font-style: normal !important;
 }
 
 /* Sección del Mapa */

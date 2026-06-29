@@ -9,6 +9,8 @@ import {
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 // Mini Map Recenter component
 const MiniMapRecenter = ({ lat, lng }) => {
@@ -789,14 +791,21 @@ const Dashboard = () => {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="prop-desc">Descripción Detallada (Amenities, Entorno)</label>
-                <textarea
+                <ReactQuill
                   id="prop-desc"
+                  theme="snow"
                   value={propForm.descripcion}
-                  onChange={(e) => setPropForm(prev => ({ ...prev, descripcion: e.target.value }))}
-                  className="form-control"
-                  rows="5"
+                  onChange={(content) => setPropForm(prev => ({ ...prev, descripcion: content }))}
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                      ['clean']
+                    ]
+                  }}
                   placeholder="Detalles sobre calefacción, cochera, patio, materiales de construcción..."
-                ></textarea>
+                />
               </div>
 
               {/* Photo upload with explanation of conversion/WebP optimizations */}
